@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IILM University – Enquiry Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --navy:   #0d2145;
+      --maroon: #8b1a2f;
+      --gold:   #c9a84c;
+      --cream:  #faf7f2;
+      --light:  #f0eae0;
+      --muted:  #9a8f82;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      animation: fadeDown 0.5s ease both;
+    }
+
+    .crest {
+      width: 46px; height: 46px;
+      background: var(--navy);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .crest svg { width: 26px; height: 26px; }
+
+    .header-text h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--navy);
+    }
+    .header-text p {
+      font-size: 0.73rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+    }
+
+    .status {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.73rem; color: var(--muted);
+    }
+    .dot {
+      width: 7px; height: 7px;
+      background: #3ab97a; border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    /* Chat window */
+    .chat-window {
+      width: 100%; max-width: 680px;
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid rgba(13,33,69,0.08);
+      box-shadow: 0 8px 32px rgba(13,33,69,0.12);
+      display: flex; flex-direction: column;
+      height: 540px;
+      overflow: hidden;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .accent-bar {
+      height: 3px;
+      background: linear-gradient(90deg, var(--navy), var(--maroon), var(--gold));
+    }
+
+    /* Messages */
+    .messages {
+      flex: 1; overflow-y: auto;
+      padding: 20px;
+      display: flex; flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-thumb { background: var(--light); border-radius: 4px; }
+
+    .msg { display: flex; gap: 9px; align-items: flex-end; animation: bubbleIn 0.25s ease both; }
+    .msg.user { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem; font-weight: 600; flex-shrink: 0;
+    }
+    .msg.bot  .avatar { background: var(--navy); color: var(--gold); font-family: 'Playfair Display', serif; }
+    .msg.user .avatar { background: var(--light); color: var(--navy); }
+
+    .bubble {
+      max-width: 72%;
+      padding: 10px 15px;
+      border-radius: 16px;
+      font-size: 0.86rem;
+      line-height: 1.6;
+    }
+    .msg.bot  .bubble { background: var(--cream); color: var(--navy); border-bottom-left-radius: 3px; border: 1px solid rgba(13,33,69,0.07); }
+    .msg.user .bubble { background: var(--navy); color: #fff; border-bottom-right-radius: 3px; }
+
+    /* Typing indicator */
+    .typing-dots { display: flex; gap: 4px; align-items: center; padding: 2px 0; }
+    .typing-dots span {
+      width: 6px; height: 6px;
+      background: var(--muted); border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    /* Input */
+    .input-area {
+      padding: 14px 16px;
+      display: flex; gap: 9px; align-items: center;
+      border-top: 1px solid var(--light);
+      background: #fff;
+    }
+
+    #userInput {
+      flex: 1;
+      border: 1.5px solid var(--light);
+      border-radius: 50px;
+      padding: 10px 18px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.86rem;
+      color: var(--navy);
+      background: var(--cream);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #userInput::placeholder { color: var(--muted); }
+    #userInput:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(13,33,69,0.07); }
+
+    #sendBtn {
+      width: 40px; height: 40px;
+      border-radius: 50%; border: none;
+      background: var(--navy); color: #fff;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, transform 0.1s;
+      flex-shrink: 0;
+    }
+    #sendBtn:hover  { background: var(--maroon); }
+    #sendBtn:active { transform: scale(0.92); }
+    #sendBtn svg { width: 16px; height: 16px; }
+
+    /* Footer */
+    .footer {
+      margin-top: 12px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      animation: fadeUp 0.8s ease both;
+    }
+    .footer span { color: var(--maroon); font-weight: 500; }
+
+    /* Animations */
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(12px);  } to { opacity:1; transform:translateY(0); } }
+    @keyframes bubbleIn { from { opacity:0; transform:translateY(8px);   } to { opacity:1; transform:translateY(0); } }
+    @keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    @keyframes bounce   { 0%,80%,100% { transform:translateY(0); } 40% { transform:translateY(-5px); } }
+
+    @media (max-width: 520px) {
+      body { padding: 0; background: #fff; }
+      .chat-window { height: 100svh; border-radius: 0; }
+      .header { padding: 14px 14px 0; margin-bottom: 10px; }
+      .footer { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="crest">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 3L4 8v8c0 6.5 5 11.5 12 13 7-1.5 12-6.5 12-13V8L16 3z" fill="#c9a84c" opacity="0.2"/>
+        <path d="M16 3L4 8v8c0 6.5 5 11.5 12 13 7-1.5 12-6.5 12-13V8L16 3z" stroke="#c9a84c" stroke-width="1.5"/>
+        <rect x="11" y="13" width="10" height="8" rx="1" fill="#c9a84c" opacity="0.8"/>
+        <rect x="13" y="11" width="6" height="3" rx="0.5" fill="#c9a84c"/>
+        <line x1="16" y1="13" x2="16" y2="21" stroke="#0d2145" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>IILM Enquiry Assistant</h1>
+      <p>IILM University · Greater Noida</p>
+    </div>
+    <div class="status">
+      <div class="dot"></div>
+      Online
+    </div>
+  </div>
+
+  <div class="chat-window">
+    <div class="accent-bar"></div>
+    <div class="messages" id="messages">
+      <div class="msg bot">
+        <div class="avatar">I</div>
+        <div class="bubble">Hello! I'm the IILM University Enquiry Assistant. I can help you with admissions, courses, fees, hostel, and campus info.<br><br>How can I assist you today?</div>
+      </div>
+    </div>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Ask about admissions, courses, fees…" autocomplete="off" maxlength="500"/>
+      <button id="sendBtn" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <p class="footer">Powered by <span>IILM University</span> · AI Enquiry System</p>
+
+  <script>
+    const messagesEl = document.getElementById('messages');
+    const userInput  = document.getElementById('userInput');
+    const sendBtn    = document.getElementById('sendBtn');
+
+    const scrollBottom = () => messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    function appendMessage(text, role) {
+      const wrap   = document.createElement('div');
+      wrap.className = `msg ${role}`;
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.textContent = role === 'bot' ? 'I' : 'You';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      wrap.append(avatar, bubble);
+      messagesEl.appendChild(wrap);
+      scrollBottom();
+    }
+
+    function showTyping() {
+      const wrap   = document.createElement('div');
+      wrap.className = 'msg bot'; wrap.id = 'typing';
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar'; avatar.textContent = 'I';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+      wrap.append(avatar, bubble);
+      messagesEl.appendChild(wrap);
+      scrollBottom();
+    }
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+      appendMessage(text, 'user');
+      userInput.value = '';
+      sendBtn.disabled = true;
+      showTyping();
+      try {
+        const res  = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
+        const data = await res.json();
+        document.getElementById('typing')?.remove();
+        appendMessage(data.reply || 'Sorry, I could not process that.', 'bot');
+      } catch {
+        document.getElementById('typing')?.remove();
+        appendMessage('Connection error. Please try again or contact admissions@iilm.edu.', 'bot');
+      } finally {
+        sendBtn.disabled = false;
+        userInput.focus();
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+  </script>
+</body>
+</html>
