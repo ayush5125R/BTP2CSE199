@@ -6,18 +6,18 @@ import os
 from sentence_transformers import SentenceTransformer
 import chromadb
 
-# ── Load environment variables
+#Load environment variables
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 
-# ── Load embedding model
+# Load embedding model
 embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# ── ChromaDB persistent client
+#ChromaDB persistent client
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 
-# ── Create or load collection
+#Create or load collection
 collection = chroma_client.get_or_create_collection(
     name="iilm_knowledge",
     metadata={"hnsw:space": "cosine"}
@@ -25,15 +25,15 @@ collection = chroma_client.get_or_create_collection(
 
 app = Flask(__name__)
 CORS(app)
-app.secret_key = "iilm_secret_key"  # needed for session to work
+app.secret_key = "iilm_secret_key" 
 
-# ── Load knowledge base from text file
+#Load knowledge base from text file provided
 with open("iilm_data.txt", "r") as f:
     raw_text = f.read()
 
 chunks = [chunk.strip() for chunk in raw_text.split("\n\n") if chunk.strip()]
 
-# ── Load chunks into ChromaDB only if collection is empty
+#Load chunks into database only if collection is empty
 if collection.count() == 0:
     print("Loading chunks into ChromaDB...")
     embeddings = embedding_model.encode(chunks).tolist()
@@ -46,10 +46,10 @@ if collection.count() == 0:
 else:
     print(f"ChromaDB already has {collection.count()} chunks loaded!")
 
-# ── Chat histories per user
+#Chat histories per user
 chat_histories = {}
 
-# ── Routes
+#Routes
 
 @app.route("/")
 def home():
@@ -78,20 +78,20 @@ def chat():
         return jsonify({"reply": "Please keep your question under 500 characters."}), 400
 
     try:
-        # Step 1: Convert user question to vector embedding
+        #Step 1: Convert user question to vector embeddings
         query_embedding = embedding_model.encode(user_message).tolist()
 
-        # Step 2: Search ChromaDB for top 3 most relevant chunks
+        #Step 2: Search ChromaDB for top 3 most relevant chunks
         results = collection.query(
             query_embeddings=[query_embedding],
             n_results=3
         )
 
-        # Step 3: Extract top chunks and build context
+        #Step 3: Extract top chunks and build context
         top_chunks = results['documents'][0]
         context = "\n\n".join(top_chunks)
 
-        # Step 4: Build system prompt with retrieved context
+        #Step 4: Build system prompt with retrieved content
         messages = [
             {
                 "role": "system",
@@ -104,12 +104,12 @@ INFORMATION:
             }
         ]
 
-        # Step 5: Add last 6 turns of THIS user's conversation history
+        #Step 5: Add last 6 turns of this user's conversation history
         for turn in chat_histories[uid][-6:]:
             messages.append({"role": "user", "content": turn["user"]})
             messages.append({"role": "assistant", "content": turn["bot"]})
 
-        # Step 6: Add current user message and call LLaMA via Groq
+        #Step 6: Add current user message and call LLaMA
         messages.append({"role": "user", "content": user_message})
 
         response = client.chat.completions.create(
@@ -122,7 +122,7 @@ INFORMATION:
         print(f"Error: {e}")
         reply = "I'm not sure about that. Please contact us at admissions@iilm.edu or call +91-8860427537."
 
-    # ── Save turn to this user's history
+    # Save turn to this user's history
     chat_histories[uid].append({"user": user_message, "bot": reply})
     return jsonify({"reply": reply, "source": "rag"})
 
